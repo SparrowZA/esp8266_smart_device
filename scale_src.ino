@@ -3,11 +3,11 @@
 #include "dictionary.h"
 #include "network.h"
 
-#define DEBUG_LEVEL = 1
+#define DEBUG_LEVEL 1
 
-#if (DEBUG_LEVEL == 1)
-#define debug(x) is Serial.print(x)
-#define debugln(x) is Serial.println(x)
+#if DEBUG_LEVEL == 1
+#define debug(x) Serial.print(x)
+#define debugln(x) Serial.println(x)
 #else
 #define debug(x)
 #define debugln(x)
@@ -40,15 +40,15 @@ void setup(void){
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
     delay(100);
-    Serial.println("setup");
+    debugln("setup");
     
     // TODO: Return the IP address bro, not an empty string ******
     String ip_address = connectToNetwork();
     // String ip_address = WiFi.localIP();
-    Serial.println(ip_address);
+    debugln(ip_address);
 
     String tmp_url = SERVER_URL + "register/?ip=" + ip_address;
-    Serial.println(tmp_url);
+    debugln(tmp_url);
 
     if (send_http_get(SERVER_URL + "status/")){
         delay(100);
@@ -76,18 +76,18 @@ void loop(){
     // test_print(test_str.c_str());
     
 
-    Serial.println("Main loop.");
+    debugln("Main loop.");
     String data = "name=John&age=20";
 
     String post_url = SERVER_URL + device_id + "/";
-    Serial.println("POST: " + post_url);
+    debugln("POST: " + post_url);
     http_client.begin(client, SERVER_URL);
     http_client.addHeader("Content-Type", "application/x-www-form-urlencoded");
     http_client.POST(data);
     String content = http_client.getString();
     http_client.end();
 
-    Serial.println(content);
+    debugln(content);
     delay(2000);
 }
 
@@ -103,7 +103,7 @@ const char * string_to_char(String message){
 }
 
 void test_print(const char *message){
-    Serial.println(message);
+    debugln(message);
 }
 
 String connectToNetwork(){
@@ -119,13 +119,13 @@ String connectToNetwork(){
 
     network_cnt = WiFi.scanNetworks(false);
     delay(500);
-    Serial.println("Number of APs: " + network_cnt);
+    debugln("Number of APs: " + network_cnt);
     for (int i = 0; i < network_cnt; i++){
         for(int j=0; j < (sizeof(connections) / sizeof(connections[0])); j++){
 
             if(connections[j].ssid.equals(WiFi.SSID(i))){
-                // Serial.println(connections[j].ssid + " struct SSID.");
-                Serial.println(connections[j].ssid + " network found. Attempting connection...");
+                // debugln(connections[j].ssid + " struct SSID.");
+                debugln(connections[j].ssid + " network found. Attempting connection...");
                 if (connect_to_wifi(connections[j])){
                     return convert_ip_to_string(WiFi.localIP());
                 }
@@ -137,7 +137,7 @@ String connectToNetwork(){
 }
 
 boolean connect_to_wifi(NetworkConn connection){
-    Serial.println("Entering Connection function");
+    debugln("Entering Connection function");
 
     char* chr_ssid = str_to_char_arr(connection.ssid);
     char* chr_pword = str_to_char_arr(connection.password);
@@ -147,17 +147,17 @@ boolean connect_to_wifi(NetworkConn connection){
     int retry = 0;
     while (WiFi.status() != WL_CONNECTED) {
         if(retry >= 5){
-            Serial.println("Could not connect to WiFi!");
+            debugln("Could not connect to WiFi!");
             return false;
         }
         WiFi.begin(chr_ssid, chr_pword);
         int count = 0;
         while (WiFi.status() != WL_CONNECTED) {
             if(count == 8){
-                Serial.println("Connection not made. Retrying!");
+                debugln("Connection not made. Retrying!");
                 break;
             }
-            Serial.println("*");
+            debugln("*");
             delay(500);
             count++;
         }
@@ -165,10 +165,10 @@ boolean connect_to_wifi(NetworkConn connection){
         retry++;
     }
 
-    Serial.println("");
-    Serial.println("WiFi Connection Succesful");
-    Serial.println("The IP address of the ESP8266 is:");
-    Serial.println(WiFi.localIP());
+    debugln("");
+    debugln("WiFi Connection Succesful");
+    debugln("The IP address of the ESP8266 is:");
+    debugln(WiFi.localIP());
     return true;
 }
 
@@ -184,17 +184,17 @@ void print_status(){
 
     switch(status) {
         case WL_CONNECTED:
-            Serial.println("WL_CONNECTED");
+            debugln("WL_CONNECTED");
         case WL_NO_SSID_AVAIL:
-            Serial.println("WL_NO_SSID_AVAIL");
+            debugln("WL_NO_SSID_AVAIL");
         case WL_CONNECT_FAILED:
-            Serial.println("WL_CONNECT_FAILED");
+            debugln("WL_CONNECT_FAILED");
         case WL_WRONG_PASSWORD:
-            Serial.println("WL_WRONG_PASSWORD");
+            debugln("WL_WRONG_PASSWORD");
         case WL_IDLE_STATUS:
-            Serial.println("WL_IDLE_STATUS");
+            debugln("WL_IDLE_STATUS");
         case WL_DISCONNECTED:
-            Serial.println("WL_DISCONNECTED");
+            debugln("WL_DISCONNECTED");
     }
 }
 
@@ -202,11 +202,11 @@ void print_particulars(char* ssid, int length){
     for (int i=0; i < length; i++){
         Serial.print(ssid[i]);
     }
-    Serial.println();
+    debugln();
 }
 
 char* str_to_char_arr(String str){
-    Serial.println(str);
+    debugln(str);
     String temp = str;
     char *cstr = new char[temp.length() + 1];
     strcpy(cstr, temp.c_str());
@@ -214,7 +214,7 @@ char* str_to_char_arr(String str){
 }
 
 String register_device(String ip_address){
-    Serial.println("ip address: " + ip_address);
+    debugln("ip address: " + ip_address);
     String tmp_url = SERVER_URL + "register/?ip=" + ip_address;
     String content = send_http_post(tmp_url);
     String device_id = decode_uuid(content);
@@ -229,20 +229,20 @@ String decode_uuid(String post_data){
 
     colon_idx = post_data.indexOf(":") ;
     tmp.remove(0, colon_idx);
-    Serial.println("no colon: " + tmp);
+    debugln("no colon: " + tmp);
 
     quote1_idx = tmp.indexOf("\"");
-    Serial.println("Double quote index: " + quote1_idx);
+    debugln("Double quote index: " + quote1_idx);
     // tmp = post_data.substring(quote1_idx, post_data.length());
     tmp.remove(0, quote1_idx + 1);
-    Serial.println("no first quote:" + tmp);
+    debugln("no first quote:" + tmp);
     
     quote2_idx = tmp.lastIndexOf("\"");
     // tmp = post_data.substring(0, quote2_idx);
     tmp.remove(quote2_idx, tmp.length() - quote2_idx);
-    Serial.println("No last quote: " + tmp);
-    Serial.println();
-    Serial.println();
+    debugln("No last quote: " + tmp);
+    debugln();
+    debugln();
     delay(3000);
     return tmp;
 }
@@ -259,7 +259,7 @@ String send_http_post(String url){
         delay(100);
 
         int http_response = tmp_http_client.GET();
-        Serial.println(http_response);
+        debugln(http_response);
         
         if(http_response == 201){
             content = tmp_http_client.getString();
@@ -268,17 +268,17 @@ String send_http_post(String url){
             break;
         }
         else{
-            Serial.println("An error occured.");
+            debugln("An error occured.");
         }
-        Serial.println("No response");
+        debugln("No response");
         delay(500);
     }
 
-    Serial.println("Content response: " + content);
+    debugln("Content response: " + content);
     
     tmp_http_client.end();
     tmp_client.stop();
-    Serial.println("Clients closed");
+    debugln("Clients closed");
     return content;
 }
 
@@ -292,7 +292,7 @@ boolean send_http_get(String message){
         tmp_http_client.begin(tmp_client, message);
 
         int http_response = tmp_http_client.GET();
-        Serial.println(http_response);
+        debugln(http_response);
         
         if(http_response == 200){
             tmp_http_client.end();
@@ -300,9 +300,9 @@ boolean send_http_get(String message){
             return true;
         }
         else{
-            Serial.println("An error occured.");
+            debugln("An error occured.");
         }
-        Serial.println("No response");
+        debugln("No response");
         delay(500);
     }
     tmp_http_client.end();
